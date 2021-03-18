@@ -2,7 +2,7 @@ import React, { useState } from "react";
 
 import TodoList, { TodoEntry } from "./TodoList";
 
-const App: React.FunctionComponent = (): JSX.Element => {
+const App: React.FC = () => {
   const [data, setData] = useState<TodoEntry[]>([]);
 
   const updateData = (data: TodoEntry[]): void => {
