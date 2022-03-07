@@ -7,6 +7,10 @@ jobs:
     executor: node/default
     working_directory: ~/project
     steps:
+    - checkout
+    - node/install-packages:
+        cache-path: ./node_modules
+        override-ci-command: npm install
     - run:
         name: Check that the files in the events and enums folders are defined correctly
         command: cd todo-mvc && npm run publish
