@@ -5,10 +5,11 @@ orbs:
 jobs:
   test:
     executor: node/default
+    working_directory: ~/project
     steps:
     - run:
         name: Check that the files in the events and enums folders are defined correctly
-        command: npm run publish
+        command: ll && npm run publish
 
 workflows:
   build:
