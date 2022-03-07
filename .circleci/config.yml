@@ -13,7 +13,7 @@ jobs:
         override-ci-command: npm install
     - run:
         name: Check that the files in the events and enums folders are defined correctly
-        command: cd todo-mvc && npm run publish
+        command: pwd && ls -l && npm run publish
 
 workflows:
   build:
