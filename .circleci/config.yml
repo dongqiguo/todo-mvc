@@ -1,0 +1,17 @@
+version: 2.1
+jobs:
+  test:
+    executor: node/default
+    - run:
+        name: Check that the files in the events and enums folders are defined correctly
+        command: cd todo-mvc && npm start verify
+
+workflows:
+  build:
+    jobs:
+    - test:
+        requires:
+        - test
+        filters:
+          branches:
+            only: master
