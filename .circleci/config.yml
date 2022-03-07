@@ -9,7 +9,7 @@ jobs:
     steps:
     - run:
         name: Check that the files in the events and enums folders are defined correctly
-        command: ls -l && npm run publish
+        command: cd todo-mvc && npm run publish
 
 workflows:
   build:
