@@ -1,7 +1,8 @@
 {
   "scripts": {
     "dev": "webpack-dev-server --open",
-    "test": "jest"
+    "test": "jest",
+    "publish": "node src/publish.js"
   },
   "dependencies": {
     "jest": "25.1.0",
