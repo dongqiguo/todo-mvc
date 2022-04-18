@@ -1,8 +1,5 @@
-
-
-
 function main() {
-  console.log('publish, ......');
+  console.log('CIRCLE CI run publish, success!!!!');
 }
 
 main();
