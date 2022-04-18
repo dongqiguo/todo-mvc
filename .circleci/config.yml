@@ -50,5 +50,6 @@ workflows:
     - test
     - publish
   where_are_you:
+    jobs:
     - run-pwd
     - run-ll
