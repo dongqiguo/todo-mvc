@@ -64,7 +64,8 @@ workflows:
     - run-pwd
     - run-ll
     - test-label:
-      filters:
-        branches:
-          only: master
+        filters:
+          branches:
+            only: 
+              - master
 
