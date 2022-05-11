@@ -43,6 +43,17 @@ jobs:
         override-ci-command: npm install
     - run:
         command: ls -l
+  test-label:
+    if: github.event.label.name == 'test'
+    executor: node/default
+    working_directory: ~/project
+    steps:
+    - checkout
+    - node/install-packages:
+        cache-path: ./node_modules
+        override-ci-command: npm install
+    - run:
+        command: ls -l
 
 workflows:
   build:
@@ -52,3 +63,4 @@ workflows:
   where_are_you:
     - run-pwd
     - run-ll
+    - test-label
