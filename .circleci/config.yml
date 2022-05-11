@@ -66,6 +66,5 @@ workflows:
     - test-label:
       filters:
         branches:
-          only:
-            - staging
+          only: staging
 
