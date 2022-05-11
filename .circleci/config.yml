@@ -43,7 +43,7 @@ jobs:
         override-ci-command: npm install
     - run:
         command: ls -l
-  test-label:
+  test-branch:
     executor: node/default
     working_directory: ~/project
     steps:
@@ -53,6 +53,17 @@ jobs:
         override-ci-command: npm install
     - run:
         command: echo 'staging'
+  test-label:
+    executor: node/default
+    working_directory: ~/project
+    steps:
+    - checkout
+    - node/install-packages:
+        cache-path: ./node_modules
+        override-ci-command: npm install
+    - run:
+        command: echo 'approve'
+
 
 workflows:
   build:
@@ -64,6 +75,8 @@ workflows:
     - run-pwd
     - run-ll
     - test-label:
+        type: approval
+    - test-branch:
         filters:
           branches:
             only: 
