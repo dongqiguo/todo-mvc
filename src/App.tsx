@@ -10,6 +10,7 @@ const App: React.FunctionComponent = (): JSX.Element => {
     console.log(data);
     console.log(111);
     console.log('staging');
+    console.log('staging');
   };
 
   return (
