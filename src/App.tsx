@@ -8,6 +8,7 @@ const App: React.FunctionComponent = (): JSX.Element => {
   const updateData = (data: TodoEntry[]): void => {
     setData(data);
     console.log(data);
+    console.log(111);
   };
 
   return (
