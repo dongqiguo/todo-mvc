@@ -11,7 +11,7 @@ const [pull_number, token] = args;
 console.log(pull_number, token);
 
 const octokit = new Octokit({
-  auth: '09b1c87f0252b18fd5e6e3e211f4a456df3642d1'
+  auth: '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'
 })
 
 const pr = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
