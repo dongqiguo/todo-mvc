@@ -13,7 +13,7 @@ jobs:
           cache-path: ./node_modules
           override-ci-command: npm install
       - run:
-          command: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ~/project
+          command: brew install ghr && ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ~/project
 workflows:
   build:
     jobs:
