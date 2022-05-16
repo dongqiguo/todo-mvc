@@ -12,7 +12,7 @@ jobs:
           cache-path: ./node_modules
           override-ci-command: npm install
       - run:
-          command: echo ${CIRCLE_PR_NUMBER} && echo ${CIRCLE_OIDC_TOKEN} && node publish_tag.js ${CIRCLE_PR_NUMBER} ${CIRCLE_OIDC_TOKEN}
+          command: echo ${CI_PULL_REQUEST} && echo ${CI_OIDC_TOKEN} && node publish_tag.js ${CIRCLE_PR_NUMBER} ${CIRCLE_OIDC_TOKEN}
   
 workflows:
   build:
