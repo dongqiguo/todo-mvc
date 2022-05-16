@@ -2,7 +2,6 @@
 version: 2.1
 orbs:
   node: circleci/node@5.0.0
-  semantic-release: proxyco/semantic-release@4.0.0
 
 jobs:
   test:
