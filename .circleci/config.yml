@@ -1,71 +1,20 @@
+---
 version: 2.1
-orbs: 
+orbs:
   node: circleci/node@5.0.0
-
 jobs:
   test:
     executor: node/default
     working_directory: ~/project
     steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: npm run test
-  publish:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: npm run publish
-  run-pwd:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: pwd
-  run-ll:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: ls -l
-  test-label:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: echo 'staging'
-
+      - checkout
+      - node/install-packages:
+          cache-path: ./node_modules
+          override-ci-command: npm install
+      - run:
+          command: echo $CIRCLE_PULL_REQUEST
+  
 workflows:
   build:
     jobs:
-    - test
-    - publish
-  where_are_you:
-    jobs:
-    - run-pwd
-    - run-ll
-    - test-label:
-        filters:
-          branches:
-            only: 
-              - staging
-
+      - test
