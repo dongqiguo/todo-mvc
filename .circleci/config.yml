@@ -1,84 +1,217 @@
 version: 2.1
-orbs: 
-  node: circleci/node@5.0.0
 
-jobs:
-  test:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: npm run test
-  publish:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: npm run publish
-  run-pwd:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: pwd
-  run-ll:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: ls -l
-  test-branch:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: echo 'staging'
-  test-label:
-    executor: node/default
-    working_directory: ~/project
-    steps:
-    - checkout
-    - node/install-packages:
-        cache-path: ./node_modules
-        override-ci-command: npm install
-    - run:
-        command: echo 'approve'
+orbs:
+  security-scan: compass/security-scan@1
+  aws-cli: circleci/aws-cli@2.0.3
+  shellcheck: circleci/shellcheck@2.0.0
+  node: circleci/node@4.7.0
 
+commands:
+  show_dir:
+    steps:
+      - run: 
+          command: ls -l && pwd
+  build:
+    description: Build a glide-marketing-site app
+    parameters:
+      title:
+        default: Build
+        description: Title for task running the scripts
+        type: string
+      when:
+        default: on_success
+        description: When to enable or disable the run step
+        type: string
+    steps:
+      - run:
+          command: ./build.sh -- "${CIRCLE_BRANCH:-master}"
+          working_directory: ~/project/scripts
+          name: Build
+  install_hnvm:
+    steps:
+      - run:
+          command: |
+            if [[ ! -d "$HOME/.basher" ]]; then
+              git clone "https://github.com/basherpm/basher.git" "$HOME/.basher"
+              echo 'export PATH="$HOME/.basher/bin:$PATH";' >> $BASH_ENV
+            fi
+
+            printf "
+            HNVM_NODE=${HNVM_NODE:-16.13.1}
+            HNVM_PNPM=${HNVM_PNPM:-6.31.0}
+            HNVM_QUIET=${HNVM_QUIET:-true}
+            " >> ~/.hnvmrc
+
+            $HOME/.basher/bin/basher install UrbanCompass/hnvm
+            sudo apt-get -y install jq
+
+            echo 'export PATH="$HOME/.basher/cellar/packages/UrbanCompass/hnvm/bin:$PATH";' >> $BASH_ENV
+          name: Install hnvm   
+  shellcheck:
+    description: Run shellcheck
+    parameters:
+        dirs:
+            default: $CHANGED_DIRS
+            description: Space-separated list of directories to search for shell scripts in
+            type: string
+        exclude:
+            default: '*/node_modules/*'
+            description: File pattern to exclude from matches for shell scripts
+            type: string
+        pattern:
+            default: '*.sh'
+            description: File pattern to match for shell scripts
+            type: string
+        when:
+            default: always
+            description: When to enable or disable the run step
+            type: string
+    steps:
+        - shellcheck/install
+        - run:
+            command: |
+                ./scripts/shellcheck.sh \
+                  --dirs "<< parameters.dirs >>" \
+                  --pattern "<< parameters.pattern >>" \
+                  --exclude "<< parameters.exclude >>"
+            name: Run shellcheck
+            when: << parameters.when >>
+            working_directory: ~/project
+  show_dist: 
+    steps:
+      - run:
+          command: |
+            ls -a
+          working_directory: ~/project/dist
+          name: Show Dist  
+  deploy_qa: 
+    steps:
+      - run:
+          command: |
+            mkdir -p "${CIRCLE_BRANCH:-master}"
+            cp -r ./dist/* "${CIRCLE_BRANCH:-master}"
+            ls -a
+            aws s3 sync  "${CIRCLE_BRANCH:-master}" s3://glide.com-qa/"${CIRCLE_BRANCH:-master}"
+          working_directory: ~/project
+          name: Deploy QA 
+  deploy_staging: 
+    steps:
+      - run:
+          command: |
+            aws s3 sync  dist s3://glide.com-staging
+          working_directory: ~/project
+          name: Deploy Staging
+  deploy_prod: 
+    steps:
+      - run:
+          command: |
+            echo 'tags'
+# aws s3 sync  dist s3://glide.com-staging
+          working_directory: ~/project
+          name: Deploy Prod                
+
+jobs:  
+  build-and-test:
+    executor: 
+      name: node/default
+      tag: '16.14.2'
+    resource_class: large
+    steps:
+        - aws-cli/setup:
+            aws-region: ECR_AWS_REGION
+            aws-access-key-id: ECR_AWS_ACCESS_KEY_ID 
+            aws-secret-access-key: ECR_AWS_SECRET_ACCESS_KEY
+        - checkout
+        - install_hnvm
+        - show_dir
+        - shellcheck
+        - build:
+            title: Build
+            when: always
+        - show_dist
+        - deploy_qa
+  build-staging:
+    executor: 
+      name: node/default
+      tag: '16.14.2'
+    resource_class: large
+    steps:
+        - aws-cli/setup:
+            aws-region: ECR_AWS_REGION
+            aws-access-key-id: ECR_AWS_ACCESS_KEY_ID 
+            aws-secret-access-key: ECR_AWS_SECRET_ACCESS_KEY
+        - checkout
+        - install_hnvm
+        - shellcheck
+        - build:
+            title: Build
+            when: always
+        - show_dist
+        - deploy_staging            
+  security-deploy:
+    executor: 
+      name: node/default
+      tag: '16.14.2'
+    resource_class: large
+    steps:
+        - aws-cli/setup:
+            aws-region: ECR_AWS_REGION
+            aws-access-key-id: ECR_AWS_ACCESS_KEY_ID 
+            aws-secret-access-key: ECR_AWS_SECRET_ACCESS_KEY
+        - checkout
+        - install_hnvm
+        - shellcheck
+        - build:
+            title: Build
+            when: always
+        - show_dist
+        - deploy_prod   
 
 workflows:
-  build:
+  security:
+    description: PR security scans
     jobs:
-    - test
-    - publish
-  where_are_you:
-    jobs:
-    - run-pwd
-    - run-ll
-    - test-label:
-        type: approval
-    - test-branch:
+    - security-scan/changes:
+        context:
+        - security-scan
         filters:
           branches:
-            only: 
-              - staging
-
+            ignore:
+            - master
+  security_full:
+    description: Weekly run of security scans
+    jobs:
+    - security-scan/all:
+        context:
+        - security-scan
+    triggers:
+    - schedule:
+        cron: 0 3 * * 0,3
+        filters:
+          branches:
+            only:
+            - master
+  ci: 
+    jobs:
+      - build-and-test:
+          context:
+          - security-scan
+          filters:
+            branches:
+              ignore:
+                - master
+  ci-master: 
+    jobs:
+      - build-staging:
+          filters:
+            branches:
+              only:
+                - master
+  security_deploy:
+    jobs:
+      - security-deploy:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^(?!app-v\d+\.\d+\.\d+)[\w\d-]+-v\d+\.\d+\.\d+$/                                                     
