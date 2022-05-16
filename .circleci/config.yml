@@ -3,85 +3,7 @@ version: 2.1
 orbs:
   node: circleci/node@5.0.0
   semantic-release: proxyco/semantic-release@4.0.0
-commands:
-  release:
-    description: Trigger the semantic release workflow
-    parameters:
-      tag_format:
-        type: string
-        default: ''
-        description: Sets the '--tag-format' flag for semantic-release, omit to use the default.
-      config_file:
-        type: string
-        default: ''
-        description: Provide a different configuration file
-      slack_webhook:
-        type: env_var_name
-        default: SLACK_WEBHOOK
-        description: Slack Webhook URL for the semantic-release-slack-bot
-      debug:
-        type: boolean
-        default: false
-        description: If "true" will provide more verbose output
-    steps:
-      - run:
-          name: Add Github to known_hosts
-          command: |
-            # https://help.github.com/en/github/authenticating-to-github/githubs-ssh-key-fingerprints
-            vcs_provider="github.com"
 
-            if [[ -z "${GH_SSH_FINGERPRINT}" ]]; then
-              echo "GH_SSH_FINGERPRINT is required!"
-              exit 1
-            fi
-
-            # check to see if Github already exists in known_hosts
-            if ! ssh-keygen -F "${vcs_provider}" 2>/dev/null; then
-              echo "Github not present in known_hosts, adding..."
-              # create the ssh directory in $HOME
-              mkdir -p ~/.ssh
-
-              # get the Github.com ssh key
-              ssh-keyscan "${vcs_provider}" 2>/dev/null > gh_key
-
-              # generate the fingerprint
-              ssh-keygen -lf gh_key | cut -d ' ' -f 2 > gen_fingerprint
-
-              <<# parameters.debug >>
-              echo "Contents of gen_fingerprint:"
-              cat gen_fingerprint
-              <</ parameters.debug >>
-
-              # verify that the Github SSH key exists in gen_fingerprint
-              if ! grep -Fx "${GH_SSH_FINGERPRINT}" gen_fingerprint 1>/dev/null; then
-                echo "Fingerprint not found!"
-              fi
-
-              # add key to known_hosts
-              cat gh_key >> ~/.ssh/known_hosts
-            fi
-      - run:
-          name: Trigger a Semantic Release
-          command: |
-            declare -a options
-
-            if [[ -n "<< parameters.tag_format >>" ]]; then
-              options+=("--tag-format" '<< parameters.tag_format >>')
-            fi
-
-            if [[ -n "<< parameters.config_file >>" ]]; then
-              filename="<< parameters.config_file >>"
-              extension="${filename##*.}"
-              ln -sf "<< parameters.config_file >>" ".releaserc.${extension}"
-            fi
-
-            if [[ -n "${<< parameters.slack_webhook >>}" ]]; then
-              export SLACK_WEBHOOK="${<< parameters.slack_webhook >>}"
-            else
-              echo "SLACK_WEBHOOK is NOT set, no slack notifications will be sent."
-            fi
-
-            semantic-release <<# parameters.debug >> --debug <</ parameters.debug >> "${options[@]}"
 jobs:
   test:
     executor: node/default
@@ -92,47 +14,8 @@ jobs:
           cache-path: ./node_modules
           override-ci-command: npm install
       - run:
-          command: echo $CI_PULL_REQUEST && echo $CIRCLE_OIDC_TOKEN && node publish_tag.js $CIRCLE_PR_NUMBER $CIRCLE_OIDC_TOKEN
-  release:
-    executor: semantic-release
-    parameters:
-      tag_format:
-        type: string
-        default: ''
-        description: Sets the '--tag-format' flag for semantic-release, omit to use the default.
-      config_file:
-        type: string
-        default: ''
-        description: Provide a different configuration file
-      slack_webhook:
-        type: env_var_name
-        default: SLACK_WEBHOOK
-        description: Slack Webhook URL for the semantic-release-slack-bot
-      attach_project:
-        type: boolean
-        default: false
-        description: If "true" will run "attach_workspace" at "~/project"
-      debug:
-        type: boolean
-        default: false
-        description: If "true" will provide more verbose output
-    steps:
-      - when:
-          condition: <<parameters.attach_project>>
-          steps:
-            - attach_workspace:
-                at: ~/project
-      - unless:
-          condition: <<parameters.attach_project>>
-          steps:
-            - checkout
-      - release:
-          tag_format: << parameters.tag_format >>
-          config_file: << parameters.config_file >>
-          slack_webhook: << parameters.slack_webhook >>
-          debug: << parameters.debug >>
+          command: ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${VERSION} ~/project
 workflows:
   build:
     jobs:
       - test
-      - release
