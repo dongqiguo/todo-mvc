@@ -1,23 +1,26 @@
 // Octokit.js
 // https://github.com/octokit/core.js#readme
-import { Octokit, App } from "octokit";
+import { Octokit } from "octokit";
 
 
 const args = process.argv.slice(2);
 
-
-const [pull_number, token] = args;
-
-console.log(pull_number, token);
+const [token] = args;
 
 const octokit = new Octokit({
-  auth: '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'
+  auth: token
 })
 
-const pr = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+const result = await octokit.request('POST /repos/{owner}/{repo}/releases', {
   owner: 'guodongqi-boy',
   repo: 'todo-mvc',
-  pull_number: 12
+  tag_name: 'v1.0.0',
+  target_commitish: 'master',
+  name: 'v1.0.0',
+  body: 'Description of the release',
+  draft: false,
+  prerelease: false,
+  generate_release_notes: false
 });
 
-console.log(pr);
+console.log(result);

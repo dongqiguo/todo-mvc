@@ -13,7 +13,7 @@ jobs:
           cache-path: ./node_modules
           override-ci-command: npm install
       - run:
-          command: echo ${GITHUB_TOKEN} && echo ${CIRCLE_PROJECT_USERNAME} && echo ${CIRCLE_PROJECT_REPONAME} && echo ${CIRCLE_SHA1} && echo ${VERSION} 
+          command: node publish_tag.js ${GITHUB_TOKEN} 
 workflows:
   build:
     jobs:
