@@ -3,15 +3,16 @@ version: 2.1
 orbs:
   node: circleci/node@5.0.0
 
+parameters:
+  tag:
+    type: string
+    description: If it exists, then the version with the tag will be released to the production environment
+    default: ""
+
 jobs:
   test:
     executor: node/default
     working_directory: ~/project
-    parameters:
-      tag:
-        default: ''
-        description: If it exists, then the version with the tag will be released to the production environment
-        type: string
     steps:
       - checkout
       - node/install-packages:
