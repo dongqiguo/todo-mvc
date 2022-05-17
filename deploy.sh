@@ -1,8 +1,7 @@
 #!/bin/bash
 set -e
-SCRIPTS_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-if [[ -n "${tag}"]]; then
-    echo "deploy to master"
-fielse
-    echo "deploy to staging"
-if    
+if [[ -n "${tag}" ]]; then
+   echo "-n ${tag} : 字符串长度不为 0"
+else
+   echo "-n ${tag} : 字符串长度为 0"
+fi
