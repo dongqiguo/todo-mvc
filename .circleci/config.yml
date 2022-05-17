@@ -7,13 +7,17 @@ jobs:
   test:
     executor: node/default
     working_directory: ~/project
+    parameters:
+      tag:
+        description: If it exists, then the version with the tag will be released to the production environment
+        type: string
     steps:
       - checkout
       - node/install-packages:
           cache-path: ./node_modules
           override-ci-command: npm install
       - run:
-          command: node publish_tag.js ${GITHUB_TOKEN} 
+          command: ./deploy.sh "<< parameters.tag >>"
 workflows:
   build:
     jobs:
