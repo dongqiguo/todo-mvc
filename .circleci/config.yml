@@ -9,6 +9,7 @@ jobs:
     working_directory: ~/project
     parameters:
       tag:
+        default: ''
         description: If it exists, then the version with the tag will be released to the production environment
         type: string
     steps:
